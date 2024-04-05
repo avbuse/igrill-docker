@@ -1,6 +1,7 @@
 from builtins import range
 from config import strip_config
 from igrill import IGrillMiniPeripheral, IGrillV2Peripheral, IGrillV3Peripheral, Pulse2000Peripheral, DeviceThread
+import os
 import logging
 import paho.mqtt.client as mqtt
 
@@ -47,8 +48,20 @@ config_requirements = {
 }
 
 config_defaults = {
+    'devices': {
+        'specs': {
+            'name': os.getenv('name', 'igrill'),
+            'type': os.getenv('type', 'igrill_v2'),
+            'address': os.getenv('address', 'No-MAC-Address-Set'),
+            'topic': os.getenv('topic', 'cooking/igrill'),
+            'interval': int(os.getenv('interval', 10)),
+            'publish_missing_probes': bool(os.getenv('missing_probes', False))
+        },
+    },
     'mqtt': {
-        'host': 'localhost'
+        'host': os.getenv('mqtt_host', 'localhost'),
+        'port': os.getenv('mqtt_port', 1883),
+        'keepalive': os.getenv('keepalive', 60),
     }
 }
 
