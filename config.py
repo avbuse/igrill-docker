@@ -8,7 +8,7 @@ from ruamel.yaml import YAML
 def sync_env_vars_with_config(config_directory):
     env_vars = [
         'device_name', 'device_address', 'device_type', 'device_topic', 'device_interval', 
-        'mqtt_host', 'mqtt_port', 'mqtt_auth_username', 'mqtt_auth_password'
+        'mqtt_host', 'mqtt_port', 'mqtt_keepalive', 'mqtt_auth_username', 'mqtt_auth_password'
     ]
     mqtt_vars = {}
     device_vars = {}
