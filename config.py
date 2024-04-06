@@ -25,7 +25,7 @@ def sync_env_vars_with_config(config_directory):
     print(f"device_vars: {device_vars}")
 
     yaml = YAML()
-    yaml.default_style = "'"
+#    yaml.default_style = "'"
 
     # Load the config requirements
     from utils import config_requirements
