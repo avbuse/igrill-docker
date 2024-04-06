@@ -4,11 +4,12 @@ import os
 import yaml
 from yamlreader import yaml_load
 from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import SingleQuotedScalarString
 
 def sync_env_vars_with_config(config_directory):
     env_vars = [
         'device_name', 'device_address', 'device_type', 'device_topic', 'device_interval', 
-        'mqtt_host', 'mqtt_port', 'mqtt_keepalive', 'mqtt_auth_username', 'mqtt_auth_password'
+        'mqtt_host', 'mqtt_port', 'mqtt_auth_username', 'mqtt_auth_password'
     ]
     mqtt_vars = {}
     device_vars = {}
@@ -25,7 +26,6 @@ def sync_env_vars_with_config(config_directory):
     print(f"device_vars: {device_vars}")
 
     yaml = YAML()
-#    yaml.default_style = "'"
 
     # Load the config requirements
     from utils import config_requirements
@@ -52,11 +52,15 @@ def sync_env_vars_with_config(config_directory):
                     vars_dict[key] = int(value)
                 elif required_entries[key] == bool:
                     vars_dict[key] = value.lower() == 'true'
+                elif required_entries[key] == str:
+                    vars_dict[key] = SingleQuotedScalarString(value)
             elif key in optional_entries:
                 if optional_entries[key] == int:
                     vars_dict[key] = int(value)
                 elif optional_entries[key] == bool:
                     vars_dict[key] = value.lower() == 'true'
+                elif optional_entries[key] == str:
+                    vars_dict[key] = SingleQuotedScalarString(value)
 
         if filename == 'device.yaml':
             template['devices'] = [vars_dict]
@@ -67,7 +71,6 @@ def sync_env_vars_with_config(config_directory):
             yaml.dump(template, file)
 
         print(f"Updated template for {filename}: {template}")
-
                             
 def read_config(config_path, defaults):
     """Read config file from given location, and parse properties"""
