@@ -5,7 +5,7 @@ import logging
 import threading
 import time
 
-from config import Config
+from config import Config, sync_env_vars_with_config
 from utils import log_setup, mqtt_init, get_device_threads, config_requirements, config_defaults
 
 
@@ -22,11 +22,13 @@ def main():
                         action="store_true")
     options = parser.parse_args()
 
+    sync_env_vars_with_config(options.config_directory)
+
     # Setup logging
     log_setup(options.log_level, options.log_destination)
 
     config = Config(options.config_directory, config_requirements, config_defaults)
-
+    
     if options.configtest:
         exit(config.isvalid())
 

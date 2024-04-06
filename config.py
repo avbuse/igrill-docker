@@ -3,8 +3,72 @@ import logging
 import os
 import yaml
 from yamlreader import yaml_load
+from ruamel.yaml import YAML
 
+def sync_env_vars_with_config(config_directory):
+    env_vars = [
+        'device_name', 'device_address', 'device_type', 'device_topic', 'device_interval', 
+        'mqtt_host', 'mqtt_port', 'mqtt_auth_username', 'mqtt_auth_password'
+    ]
+    mqtt_vars = {}
+    device_vars = {}
 
+    for var in env_vars:
+        value = os.getenv(var)
+        if value is not None:
+            if var.startswith('mqtt'):
+                mqtt_vars[var.replace('mqtt_', '')] = value
+            else:
+                device_vars[var.replace('device_', '')] = value
+
+    print(f"mqtt_vars: {mqtt_vars}")
+    print(f"device_vars: {device_vars}")
+
+    yaml = YAML()
+    yaml.default_style = "'"
+
+    # Load the config requirements
+    from utils import config_requirements
+
+    for filename, vars_dict in [('mqtt.yaml', mqtt_vars), ('device.yaml', device_vars)]:
+        filepath = os.path.join(config_directory, filename)
+        with open(filepath, 'r') as file:
+            template = yaml.load(file) or {}
+
+        print(f"Original template for {filename}: {template}")
+
+        # Check the variable types and save them into the file accordingly
+        for key, value in vars_dict.items():
+            if filename == 'mqtt.yaml':
+                specs = config_requirements['children']['mqtt']['specs']
+            elif filename == 'device.yaml':
+                specs = config_requirements['children']['devices']['specs']
+
+            required_entries = specs['required_entries']
+            optional_entries = specs.get('optional_entries', {})
+
+            if key in required_entries:
+                if required_entries[key] == int:
+                    vars_dict[key] = int(value)
+                elif required_entries[key] == bool:
+                    vars_dict[key] = value.lower() == 'true'
+            elif key in optional_entries:
+                if optional_entries[key] == int:
+                    vars_dict[key] = int(value)
+                elif optional_entries[key] == bool:
+                    vars_dict[key] = value.lower() == 'true'
+
+        if filename == 'device.yaml':
+            template['devices'] = [vars_dict]
+        elif filename == 'mqtt.yaml':
+            template['mqtt'] = vars_dict
+
+        with open(filepath, 'w') as file:
+            yaml.dump(template, file)
+
+        print(f"Updated template for {filename}: {template}")
+
+                            
 def read_config(config_path, defaults):
     """Read config file from given location, and parse properties"""
     if not os.path.isdir(config_path):
