@@ -1,25 +1,19 @@
-import os
-import yaml
+import asyncio
+from bleak import BleakScanner
 
-def sync_env_vars_with_config(env_vars, config_directory):
-    mqtt_vars = {}
-    device_vars = {}
+async def scan_and_connect():
+    scanner = BleakScanner()
+    devices = await scanner.discover()
 
-    for var in env_vars:
-        key, value = var.split('=')
-        if key.startswith('mqtt'):
-            mqtt_vars[key] = value
-        else:
-            device_vars[key] = value
+    for device in devices:
+        print(f"Checking device: {device.name}")
+        if "iGrill" in device.name:
+            print(f"Found iGrill device: {device}")
+            # Connect to the device (this doesn't actually pair the device in the Bluetooth sense)
+            # The following line is a placeholder, as the python bleak library does not support pairing
+            # You might need to use a different library or tool to pair the devices
+            print("Pairing is not supported in this script.")
+            return
 
-    for filename, vars_dict in [('mqtt.yaml', mqtt_vars), ('device.yaml', device_vars)]:
-        filepath = os.path.join(config_directory, filename)
-        if os.path.exists(filepath):
-            with open(filepath, 'r') as file:
-                current_config = yaml.safe_load(file) or {}
-            current_config.update(vars_dict)
-            with open(filepath, 'w') as file:
-                yaml.dump(current_config, file)
-        else:
-            with open(filepath, 'w') as file:
-                yaml.dump(vars_dict, file)
+loop = asyncio.get_event_loop()
+loop.run_until_complete(scan_and_connect())
